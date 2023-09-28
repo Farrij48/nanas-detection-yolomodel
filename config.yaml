@@ -1,7 +1,7 @@
 path: D:\Ilham\Project\nanas\dataset\
 train: images/train
 test: images/test
-val: images/test
+val: images/validation
 
 names:
   0: Nanas_Mentah
