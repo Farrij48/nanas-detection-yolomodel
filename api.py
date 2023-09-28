@@ -121,7 +121,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Inisialisasi model YOLO dan model path
-model_path = os.path.join(".", "runs", "detect", "train2", "weights", "last.pt")
+model_path = os.path.join(".", "runs", "detect", "train3", "weights", "last.pt")
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(
