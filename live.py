@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import cv2
 
 # Inisialisasi model YOLO dan model path
-model_path = os.path.join(".", "runs", "detect", "train3", "weights", "last.pt")
+model_path = os.path.join(".", "runs", "detect", "train3", "weights", "best.pt")
 model = YOLO(model_path)  # load a custom model
 
 # Gunakan kamera laptop (0 mengacu pada kamera bawaan)

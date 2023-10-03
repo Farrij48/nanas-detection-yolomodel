@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import cv2
 
 # Inisialisasi model YOLO dan model path
-model_path = os.path.join(".", "runs", "detect", "train3", "weights", "last.pt")
+model_path = os.path.join(".", "runs", "detect", "train3", "weights", "best.pt")
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(
@@ -26,7 +26,6 @@ results = model(image)[0]
 
 # Ambang batas deteksi
 threshold = 0.5
-cle
 for result in results.boxes.data.tolist():
     x1, y1, x2, y2, score, class_id = result
 
