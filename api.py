@@ -19,7 +19,8 @@ model = YOLO(model_path)  # load a custom model
 # Ambang batas deteksi
 threshold_img = 0.8
 
-# Ambang batas deteksi untuk live detection
+
+# Ambang batas deteksi
 threshold_live = 0.6
 
 
@@ -60,9 +61,8 @@ def detect_objects():
                         },
                     }
                 )
-                return jsonify({"detected_objects": detected_objects}), 200
-            else:
-                return jsonify({"error": "No object detected"}), 400
+
+        return jsonify({"detected_objects": detected_objects}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
