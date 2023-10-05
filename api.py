@@ -17,7 +17,10 @@ if not os.path.exists(model_path):
 model = YOLO(model_path)  # load a custom model
 
 # Ambang batas deteksi
-threshold = 0.5
+threshold_img = 0.8
+
+# Ambang batas deteksi untuk live detection
+threshold_live = 0.6
 
 
 @app.route("/detect", methods=["POST"])
@@ -44,7 +47,7 @@ def detect_objects():
         for result in results.boxes.data.tolist():
             x1, y1, x2, y2, score, class_id = result
 
-            if score > threshold:
+            if score > threshold_img:
                 detected_objects.append(
                     {
                         "class": results.names[int(class_id)].upper(),
@@ -57,8 +60,9 @@ def detect_objects():
                         },
                     }
                 )
-
-        return jsonify({"detected_objects": detected_objects}), 200
+                return jsonify({"detected_objects": detected_objects}), 200
+            else:
+                return jsonify({"error": "No object detected"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -83,7 +87,7 @@ def generate_frames():
             for result in results.boxes.data.tolist():
                 x1, y1, x2, y2, score, class_id = result
 
-                if score > threshold:
+                if score > threshold_live:
                     cv2.rectangle(
                         frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4
                     )
