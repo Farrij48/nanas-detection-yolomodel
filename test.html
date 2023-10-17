@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Object Detection</title>
+    <style>
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Object Detection</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+    <div class="result" id="result"></div>
+
+    <script>
+        const videoElement = document.getElementById('video');
+        const canvasElement = document.getElementById('canvas');
+        const canvasContext = canvasElement.getContext('2d');
+        const resultElement = document.getElementById('result');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                videoElement.srcObject = stream;
+            })
+            .catch(function (error) {
+                console.error('Error accessing the camera: ', error);
+            });
+
+        function captureAndSendFrame() {
+            canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
+            const data = new FormData();
+            data.append('image', dataURItoBlob(canvasElement.toDataURL()));
+
+            fetch('http://localhost:5000/live_detect', {
+                method: 'POST',
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Menampilkan hasil deteksi objek pada halaman web
+                const detectedObjects = data.detected_objects;
+                if (detectedObjects && detectedObjects.length > 0) {
+                    let resultText = 'Objek terdeteksi: ';
+                    detectedObjects.forEach(obj => {
+                        resultText += `${obj.class} (confidence: ${obj.confidence.toFixed(2)}), `;
+                    });
+                    resultElement.innerText = resultText.slice(0, -2); // Menghapus koma terakhir
+                } else {
+                    resultElement.innerText = 'Tidak ada objek terdeteksi.';
+                }
+            })
+            .catch(error => {
+                console.error('Error sending frame to API: ', error);
+            });
+        }
+
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
+        }
+
+        setInterval(captureAndSendFrame, 1000);
+    </script>
+</body>
+</html>

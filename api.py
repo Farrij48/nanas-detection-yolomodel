@@ -3,8 +3,10 @@ from ultralytics import YOLO
 from flask import Flask, request, jsonify, send_file, Response
 import cv2
 import numpy as np
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Inisialisasi model YOLO dan model path
 model_path = os.path.join(".", "runs", "detect", "train3", "weights", "best.pt")
@@ -17,11 +19,11 @@ if not os.path.exists(model_path):
 model = YOLO(model_path)  # load a custom model
 
 # Ambang batas deteksi
-threshold_img = 0.8
+threshold_img = 0.5
 
 
 # Ambang batas deteksi
-threshold_live = 0.6
+threshold_live = 0.5
 
 
 @app.route("/detect", methods=["POST"])
