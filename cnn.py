@@ -11,8 +11,8 @@ from skimage.measure import label, regionprops, regionprops_table
 from collections import Counter
 
 
-file = "features.xlsx"
-file_name = "testing/nanas_matang1.jpg"
+file = "features2.xlsx"
+file_name = "testing/nanasmatang1.jpeg"
 dataset = pd.read_excel(file)
 glcm_properties = [
     "dissimilarity",
@@ -52,7 +52,7 @@ gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
 # HSV
 hsv_image = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
 image = hsv_image.reshape((hsv_image.shape[0] * hsv_image.shape[1], 3))
-clt = KMeans(n_clusters=3)
+clt = KMeans(n_clusters=3, n_init=10)  # Atur nilai n_init secara eksplisit
 labels = clt.fit_predict(image)
 label_counts = Counter(labels)
 dom_color = clt.cluster_centers_[label_counts.most_common(1)[0][0]]

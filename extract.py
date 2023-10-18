@@ -3,16 +3,12 @@ import numpy as np
 import xlsxwriter
 from collections import Counter
 from skimage.feature import graycomatrix, graycoprops
-from skimage.measure import label, regionprops, regionprops_table
-from sklearn.cluster import KMeans
+from skimage.measure import label, regionprops
 
-workbook = xlsxwriter.Workbook("features.xlsx")
+workbook = xlsxwriter.Workbook("features2.xlsx")
 worksheet = workbook.add_worksheet()
 
-jenis = [
-    "nanas_matang",
-    "nanas_mentah",
-]
+jenis = ["nanas_matang", "nanas_mentah"]
 jum_per_data = 25
 
 hsv_properties = ["hue", "saturation", "value"]
@@ -30,8 +26,7 @@ shape_properties = ["metric", "eccentricity"]
 worksheet.write(0, 0, "File")
 kolom = 1
 
-# ---------------------------
-# Writing excel header
+# Menulis header excel
 for i in hsv_properties:
     worksheet.write(0, kolom, i)
     kolom += 1
@@ -46,14 +41,15 @@ worksheet.write(0, kolom, "Class")
 kolom += 1
 baris = 1
 
-# Looping for each dataset
-for i in jenis:
-    for j in range(1, 26):
+# Looping untuk setiap dataset
+for jenis_buah in jenis:
+    for nomor in range(1, jum_per_data):
         kolom = 0
-        file_name = "dataset/" + i + str(j) + ".bmp"
+        file_name = f"dataset/{jenis_buah}{nomor}.jpg"
         print(file_name)
         worksheet.write(baris, kolom, file_name)
         kolom += 1
+
         # Preprocessing
         src = cv2.imread(file_name, 1)
         tmp = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
@@ -75,23 +71,22 @@ for i in jenis:
 
         # HSV
         hsv_image = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
-        image = hsv_image.reshape((hsv_image.shape[0] * hsv_image.shape[1], 3))
-        clt = KMeans(n_clusters=3)
-        labels = clt.fit_predict(image)
-        label_counts = Counter(labels)
-        dom_color = clt.cluster_centers_[label_counts.most_common(1)[0][0]]
-        worksheet.write(baris, kolom, dom_color[0])
-        kolom += 1
-        worksheet.write(baris, kolom, dom_color[1])
-        kolom += 1
-        worksheet.write(baris, kolom, dom_color[2])
-        kolom += 1
-        dom_color_hsv = np.full(cropped.shape, dom_color, dtype="uint8")
-        dom_color_bgr = cv2.cvtColor(dom_color_hsv, cv2.COLOR_HSV2BGR)
-        output_image = np.hstack((cropped, dom_color_bgr))
+        dominant_color = cropped[
+            mask == 255
+        ]  # Pilih warna dominan dari area yang memiliki masker
 
-        cv2.imshow("Image Dominant Color", output_image)
-        cv2.waitKey(0)
+        # Nilai rata-rata untuk hue, saturation, dan value
+        hsv_hue = np.mean(dominant_color[:, 0])
+        hsv_saturation = np.mean(dominant_color[:, 1])
+        hsv_value = np.mean(dominant_color[:, 2])
+
+        worksheet.write(baris, kolom, hsv_hue)
+        kolom += 1
+        worksheet.write(baris, kolom, hsv_saturation)
+        kolom += 1
+        worksheet.write(baris, kolom, hsv_value)
+        kolom += 1
+
         # GLCM
         glcm = graycomatrix(
             gray,
@@ -101,30 +96,31 @@ for i in jenis:
             symmetric=True,
             normed=True,
         )
-
         glcm_props = [
             propery
             for name in glcm_properties
             for propery in graycoprops(glcm, name)[0]
         ]
+
         for item in glcm_props:
             worksheet.write(baris, kolom, item)
             kolom += 1
 
-        # Shape
+        # Bentuk
         label_img = label(mask)
         props = regionprops(label_img)
-        eccentricity = getattr(props[0], "eccentricity")
-        area = getattr(props[0], "area")
-        perimeter = getattr(props[0], "perimeter")
+        eccentricity = props[0].eccentricity
+        area = props[0].area
+        perimeter = props[0].perimeter
         metric = (4 * np.pi * area) / (perimeter * perimeter)
+
         worksheet.write(baris, kolom, metric)
         kolom += 1
         worksheet.write(baris, kolom, eccentricity)
         kolom += 1
 
-        worksheet.write(baris, kolom, i)
+        worksheet.write(baris, kolom, jenis_buah)
         kolom += 1
         baris += 1
+
 workbook.close()
-# --------------------------
